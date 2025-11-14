@@ -21,9 +21,8 @@
         display:flex;
         justify-content:center;
         gap:16px;
-        margin-bottom:32px;
+        margin-bottom:22px;
         flex-wrap:wrap;
-        position:relative; /* für die Row-Cost-Badge */
     }
     .card{
         background:white;
@@ -74,52 +73,11 @@
         font-weight:600;
         font-size:17px;
         box-shadow:0 4px 10px rgba(0,0,0,0.4);
-        z-index:10;
     }
     .totalbox small{
         display:block;
         font-size:13px;
         margin-top:2px;
-    }
-    /* Reset-Button */
-    #resetBtn{
-        position:fixed;
-        top:90px;
-        right:20px;
-        background:#ff4d4d;
-        border:none;
-        color:#fff;
-        padding:10px 16px;
-        border-radius:10px;
-        font-size:14px;
-        font-weight:600;
-        cursor:pointer;
-        box-shadow:0 4px 10px rgba(0,0,0,0.4);
-        z-index:10;
-    }
-    #resetBtn:hover{
-        background:#ff2f2f;
-    }
-    /* Kosten pro Block / Zeile */
-    .rowcost{
-        position:absolute;
-        right:-10px;
-        top:50%;
-        transform:translateY(-50%);
-        background:#3ea0ff;
-        color:#001018;
-        padding:6px 10px;
-        border-radius:8px;
-        font-size:13px;
-        white-space:nowrap;
-        box-shadow:0 2px 6px rgba(0,0,0,0.3);
-    }
-    @media(max-width:700px){
-        .rowcost{
-            position:static;
-            transform:none;
-            margin-top:10px;
-        }
     }
 </style>
 </head>
@@ -128,8 +86,6 @@
 <h1>Unit Special Training – Badge Cost Calculator</h1>
 
 <div id="tree"></div>
-
-<button id="resetBtn">Reset All</button>
 
 <div class="totalbox">
     <div id="partial">0</div>
@@ -190,16 +146,13 @@ const TREE=[
 const startLv = {};
 const levels  = {};
 
-// Build tree with cards + row cost badges
 function buildTree(){
     const tree=document.getElementById("tree");
 
-    TREE.forEach((row,rowIndex)=>{
+    TREE.forEach(row=>{
         const rowDiv=document.createElement("div");
         rowDiv.className="row";
-        rowDiv.dataset.rowIndex = rowIndex;
 
-        // Cards
         row.forEach(id=>{
             startLv[id]=0;
             levels[id]=0;
@@ -247,71 +200,34 @@ function buildTree(){
             rowDiv.appendChild(card);
         });
 
-        // Row cost badge
-        const rowCost=document.createElement("div");
-        rowCost.className="rowcost";
-        rowCost.id="rowcost-"+rowIndex;
-        rowCost.textContent="Cost: 0";
-        rowDiv.appendChild(rowCost);
-
         tree.appendChild(rowDiv);
     });
 }
 
-// Calculate total and per-row costs
 function calc(){
     let partial=0;
     let full=0;
 
-    // Row totals
-    const rowTotals = new Array(TREE.length).fill(0);
+    for(const id in K){
+        const arr=K[id];
+        const s = startLv[id] ?? 0;
+        const t = levels[id]  ?? 0;
 
-    TREE.forEach((row, rIdx)=>{
-        row.forEach(id=>{
-            const arr=K[id];
-            const s = startLv[id] ?? 0;
-            const t = levels[id]  ?? 0;
-
-            if(t > s){
-                const cost = arr.slice(s, t).reduce((a,b)=>a+b,0);
-                partial += cost;
-                rowTotals[rIdx] += cost;
-            }
-
-            full += arr.reduce((a,b)=>a+b,0);
-        });
-    });
-
-    // Update row cost badges
-    rowTotals.forEach((val,idx)=>{
-        const el=document.getElementById("rowcost-"+idx);
-        if(el){
-            el.textContent = "Cost: " + val.toLocaleString();
+        // Nur Kosten von current (s) bis target (t), EXKLUSIVE current.
+        // Wenn target <= current -> keine Kosten.
+        if(t > s){
+            partial += arr.slice(s, t).reduce((a,b)=>a+b,0);
         }
-    });
+
+        full += arr.reduce((a,b)=>a+b,0);
+    }
 
     document.getElementById("partial").textContent = partial.toLocaleString();
     document.getElementById("full").textContent    = "Full: " + full.toLocaleString();
 }
 
-// Reset all values
-function resetAll(){
-    for(const id in startLv){
-        startLv[id]=0;
-    }
-    for(const id in levels){
-        levels[id]=0;
-    }
-    document.querySelectorAll(".inputbox").forEach(inp=>{
-        inp.value=0;
-    });
-    calc();
-}
-
 buildTree();
 calc();
-
-document.getElementById("resetBtn").addEventListener("click", resetAll);
 </script>
 
 </body>
