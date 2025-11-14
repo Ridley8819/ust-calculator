@@ -29,7 +29,13 @@
         color:black;
         border:2px solid #3ea0ff;
         border-radius:10px;
-        width:190px;
+
+        /* ***** responsive fix ***** */
+        min-width:160px;
+        flex:1;
+        max-width:190px;
+        /* *************************** */
+
         padding:14px;
         box-shadow:0 4px 10px rgba(0,0,0,0.25);
         text-align:center;
@@ -78,6 +84,18 @@
         display:block;
         font-size:13px;
         margin-top:2px;
+    }
+
+    /* Optional: kleine Screens -> Totalbox etwas verkleinern */
+    @media (max-width: 600px){
+        body{
+            padding-top:80px;
+        }
+        .totalbox{
+            transform:scale(0.9);
+            right:10px;
+            top:10px;
+        }
     }
 </style>
 </head>
@@ -213,8 +231,6 @@ function calc(){
         const s = startLv[id] ?? 0;
         const t = levels[id]  ?? 0;
 
-        // Nur Kosten von current (s) bis target (t), EXKLUSIVE current.
-        // Wenn target <= current -> keine Kosten.
         if(t > s){
             partial += arr.slice(s, t).reduce((a,b)=>a+b,0);
         }
