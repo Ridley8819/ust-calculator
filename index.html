@@ -18,13 +18,13 @@
         margin-bottom:10px;
     }
 
-    /* --- FIX: echte responsive rows --- */
+    /* ---------------- DESKTOP (default) ---------------- */
     .row{
-        display:grid;
+        display:flex;
+        justify-content:center;
         gap:16px;
         margin-bottom:22px;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        width:100%;
+        flex-wrap:wrap;
     }
 
     .card{
@@ -32,11 +32,33 @@
         color:black;
         border:2px solid #3ea0ff;
         border-radius:10px;
+
+        /* Desktop: fix 190px wide, no stretching */
+        width:190px;
+        flex:0 0 auto;
+
         padding:14px;
         box-shadow:0 4px 10px rgba(0,0,0,0.25);
         text-align:center;
     }
-    /* ---------------------------------- */
+
+    /* ---------------- MOBILE (<700px) ---------------- */
+    @media (max-width: 700px){
+
+        /* Mobile: Grid so 3 cards can fit */
+        .row{
+            display:grid;
+            width:100%;
+            gap:16px;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        }
+
+        /* Mobile cards shrink properly */
+        .card{
+            width:auto;
+            flex:none;
+        }
+    }
 
     .card-title{
         font-size:15px;
@@ -66,6 +88,7 @@
         text-align:center;
         box-sizing:border-box;
     }
+
     .totalbox{
         position:fixed;
         top:20px;
