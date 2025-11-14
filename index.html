@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UST Badge Cost Calculator</title>
+
+<style>
+    body{
+        margin:0;
+        background:#0b1220;
+        font-family:Segoe UI,Arial,sans-serif;
+        color:white;
+        padding:20px;
+    }
+    h1{
+        font-size:26px;
+        margin-bottom:10px;
+    }
+    .row{
+        display:flex;
+        justify-content:center;
+        gap:16px;
+        margin-bottom:32px;
+        flex-wrap:wrap;
+        position:relative; /* für die Row-Cost-Badge */
+    }
+    .card{
+        background:white;
+        color:black;
+        border:2px solid #3ea0ff;
+        border-radius:10px;
+        width:190px;
+        padding:14px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.25);
+        text-align:center;
+    }
+    .card-title{
+        font-size:15px;
+        font-weight:600;
+        color:#003566;
+        margin-bottom:10px;
+    }
+    .inputs{
+        display:flex;
+        justify-content:space-between;
+        gap:6px;
+    }
+    .field{
+        flex:1;
+    }
+    .field-label{
+        font-size:11px;
+        color:#555;
+        margin-bottom:3px;
+    }
+    .inputbox{
+        width:100%;
+        padding:5px;
+        font-size:14px;
+        border:1px solid #3ea0ff;
+        border-radius:6px;
+        text-align:center;
+        box-sizing:border-box;
+    }
+    .totalbox{
+        position:fixed;
+        top:20px;
+        right:20px;
+        background:#3ea0ff;
+        padding:12px 18px;
+        border-radius:12px;
+        color:#001018;
+        font-weight:600;
+        font-size:17px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.4);
+        z-index:10;
+    }
+    .totalbox small{
+        display:block;
+        font-size:13px;
+        margin-top:2px;
+    }
+    /* Reset-Button */
+    #resetBtn{
+        position:fixed;
+        top:90px;
+        right:20px;
+        background:#ff4d4d;
+        border:none;
+        color:#fff;
+        padding:10px 16px;
+        border-radius:10px;
+        font-size:14px;
+        font-weight:600;
+        cursor:pointer;
+        box-shadow:0 4px 10px rgba(0,0,0,0.4);
+        z-index:10;
+    }
+    #resetBtn:hover{
+        background:#ff2f2f;
+    }
+    /* Kosten pro Block / Zeile */
+    .rowcost{
+        position:absolute;
+        right:-10px;
+        top:50%;
+        transform:translateY(-50%);
+        background:#3ea0ff;
+        color:#001018;
+        padding:6px 10px;
+        border-radius:8px;
+        font-size:13px;
+        white-space:nowrap;
+        box-shadow:0 2px 6px rgba(0,0,0,0.3);
+    }
+    @media(max-width:700px){
+        .rowcost{
+            position:static;
+            transform:none;
+            margin-top:10px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<h1>Unit Special Training – Badge Cost Calculator</h1>
+
+<div id="tree"></div>
+
+<button id="resetBtn">Reset All</button>
+
+<div class="totalbox">
+    <div id="partial">0</div>
+    <small id="full">Full: 0</small>
+</div>
+
+<script>
+// -------------------------------
+// COST DATA
+// -------------------------------
+const K={
+  "Fire Up (I)": [700,950,1100,1300,1500,1900,2400,3000,3800,4700],
+  "Armor Upgrade (I)": [700,950,1100,1300,1500,1900,2400,3000,3800,4700],
+  "Fast Production (I)": [900,1100,1300,1600,1900,2400,3000,3800,4800,5900],
+  "Mobility Enhancement (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+  "Melee Combat (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+  "Weaponing Upgrade (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+  "Stronger Armor (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+  "Shield Upgrade (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+  "Camo Coating (I)": [1300,1500,1800,2200,2600,3300,4100,5100,6400,7900],
+
+  "Propulsion": [1400,1700,2000,2400,2900,3600,4500,5600,7100,8600],
+  "Fast Production (II)": [1400,1700,2000,2400,2900,3600,4500,5600,7100,8600],
+
+  "Fire Up (II)": [2100,2500,2900,3600,4200,5200,6500,8200,10300,12700],
+  "Armor Upgrade (II)": [2100,2500,2900,3600,4200,5200,6500,8200,10300,12700],
+  "Demolition Crew": [2900,3700,5300,8000,12700],
+
+  "Mobility Enhancement (II)": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+  "Melee Combat (II)": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+  "Weapon Upgrading": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+  "Stronger Armor (II)": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+  "Shield Upgrade (II)": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+  "Camo Coating (II)": [2000,2400,2800,3300,3900,4700,5500,6500,7800,9000,10300,11700,13300,15400,17900],
+
+  "Recharge Shield (UST)": [1900,2300,2600,3000,3600,4400,5100,6100,7200,8400,9500,10900,12400,14300,16600,17200,19900,21000,23900,28700],
+
+  "Unit Special Training":[54900]
+};
+
+// -------------------------------
+// TREE STRUCTURE
+// -------------------------------
+const TREE=[
+  ["Fire Up (I)", "Armor Upgrade (I)"],
+  ["Fast Production (I)"],
+  ["Mobility Enhancement (I)", "Melee Combat (I)", "Weaponing Upgrade (I)"],
+  ["Stronger Armor (I)", "Shield Upgrade (I)", "Camo Coating (I)"],
+  ["Propulsion", "Fast Production (II)"],
+  ["Fire Up (II)", "Armor Upgrade (II)"],
+  ["Demolition Crew"],
+  ["Mobility Enhancement (II)", "Melee Combat (II)", "Weapon Upgrading"],
+  ["Stronger Armor (II)", "Shield Upgrade (II)", "Camo Coating (II)"],
+  ["Recharge Shield (UST)"],
+  ["Unit Special Training"]
+];
+
+const startLv = {};
+const levels  = {};
+
+// Build tree with cards + row cost badges
+function buildTree(){
+    const tree=document.getElementById("tree");
+
+    TREE.forEach((row,rowIndex)=>{
+        const rowDiv=document.createElement("div");
+        rowDiv.className="row";
+        rowDiv.dataset.rowIndex = rowIndex;
+
+        // Cards
+        row.forEach(id=>{
+            startLv[id]=0;
+            levels[id]=0;
+
+            const maxLevel = K[id].length;
+
+            const card=document.createElement("div");
+            card.className="card";
+
+            card.innerHTML=`
+                <div class="card-title">${id}</div>
+                <div class="inputs">
+                  <div class="field">
+                    <div class="field-label">Current</div>
+                    <input class="inputbox start" type="number" min="0" max="${maxLevel}" value="0">
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Target</div>
+                    <input class="inputbox target" type="number" min="0" max="${maxLevel}" value="0">
+                  </div>
+                </div>
+            `;
+
+            const s=card.querySelector(".start");
+            const t=card.querySelector(".target");
+
+            s.addEventListener("input",()=>{
+                let v=+s.value;
+                if(isNaN(v) || v<0) v=0;
+                if(v>maxLevel) v=maxLevel;
+                s.value=v;
+                startLv[id]=v;
+                calc();
+            });
+
+            t.addEventListener("input",()=>{
+                let v=+t.value;
+                if(isNaN(v) || v<0) v=0;
+                if(v>maxLevel) v=maxLevel;
+                t.value=v;
+                levels[id]=v;
+                calc();
+            });
+
+            rowDiv.appendChild(card);
+        });
+
+        // Row cost badge
+        const rowCost=document.createElement("div");
+        rowCost.className="rowcost";
+        rowCost.id="rowcost-"+rowIndex;
+        rowCost.textContent="Cost: 0";
+        rowDiv.appendChild(rowCost);
+
+        tree.appendChild(rowDiv);
+    });
+}
+
+// Calculate total and per-row costs
+function calc(){
+    let partial=0;
+    let full=0;
+
+    // Row totals
+    const rowTotals = new Array(TREE.length).fill(0);
+
+    TREE.forEach((row, rIdx)=>{
+        row.forEach(id=>{
+            const arr=K[id];
+            const s = startLv[id] ?? 0;
+            const t = levels[id]  ?? 0;
+
+            if(t > s){
+                const cost = arr.slice(s, t).reduce((a,b)=>a+b,0);
+                partial += cost;
+                rowTotals[rIdx] += cost;
+            }
+
+            full += arr.reduce((a,b)=>a+b,0);
+        });
+    });
+
+    // Update row cost badges
+    rowTotals.forEach((val,idx)=>{
+        const el=document.getElementById("rowcost-"+idx);
+        if(el){
+            el.textContent = "Cost: " + val.toLocaleString();
+        }
+    });
+
+    document.getElementById("partial").textContent = partial.toLocaleString();
+    document.getElementById("full").textContent    = "Full: " + full.toLocaleString();
+}
+
+// Reset all values
+function resetAll(){
+    for(const id in startLv){
+        startLv[id]=0;
+    }
+    for(const id in levels){
+        levels[id]=0;
+    }
+    document.querySelectorAll(".inputbox").forEach(inp=>{
+        inp.value=0;
+    });
+    calc();
+}
+
+buildTree();
+calc();
+
+document.getElementById("resetBtn").addEventListener("click", resetAll);
+</script>
+
+</body>
+</html>
