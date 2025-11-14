@@ -17,29 +17,27 @@
         font-size:26px;
         margin-bottom:10px;
     }
+
+    /* --- FIX: echte responsive rows --- */
     .row{
-        display:flex;
-        justify-content:center;
+        display:grid;
         gap:16px;
         margin-bottom:22px;
-        flex-wrap:wrap;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        width:100%;
     }
+
     .card{
         background:white;
         color:black;
         border:2px solid #3ea0ff;
         border-radius:10px;
-
-        /* ***** responsive fix ***** */
-        min-width:160px;
-        flex:1;
-        max-width:190px;
-        /* *************************** */
-
         padding:14px;
         box-shadow:0 4px 10px rgba(0,0,0,0.25);
         text-align:center;
     }
+    /* ---------------------------------- */
+
     .card-title{
         font-size:15px;
         font-weight:600;
@@ -86,7 +84,6 @@
         margin-top:2px;
     }
 
-    /* Optional: kleine Screens -> Totalbox etwas verkleinern */
     @media (max-width: 600px){
         body{
             padding-top:80px;
